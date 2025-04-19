@@ -41,6 +41,7 @@ pub fn middleware(
   use req <- wisp.handle_head(req)
 
   use <- default_responses
+
   // Handle the request!
   handle_request(req)
 }
