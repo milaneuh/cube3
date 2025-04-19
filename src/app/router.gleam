@@ -9,12 +9,17 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
   // Pattern matching the route 
   case wisp.path_segments(req) {
-    ["hello-world"] -> hello_world()
+    // Homepage
+    [] -> {
+      wisp.html_response(string_tree.from_string("Home"), 200)
+    }
+
+    // All the empty responses
+    ["internal-server-error"] -> wisp.internal_server_error()
+    ["unprocessable-entity"] -> wisp.unprocessable_entity()
+    ["method-not-allowed"] -> wisp.method_not_allowed([])
+    ["entity-too-large"] -> wisp.entity_too_large()
+    ["bad-request"] -> wisp.bad_request()
     _ -> wisp.not_found()
   }
-}
-
-fn hello_world() {
-  let body = string_tree.from_string("<h1>Hello World!</h1>")
-  wisp.html_response(body, 200)
 }
