@@ -1,4 +1,6 @@
 import app/router
+import dot_env
+import dot_env/env
 import gleam/erlang/process
 import mist
 import wisp
@@ -9,10 +11,14 @@ pub fn main() {
   // for a web application.
   wisp.configure_logger()
 
-  // Here we generate a secret key, but in a real application you would want to
-  // load this from somewhere so that it is not regenerated on every restart.
-  let secret_key_base = wisp.random_string(64)
+  // Setting up a new dotenv instance to fetch env variables 
+  dot_env.new()
+  |> dot_env.set_path(".env")
+  |> dot_env.set_debug(False)
+  |> dot_env.load()
 
+  // Fetching the secret base 
+  let assert Ok(secret_key_base) = env.get_string("SECRET")
   // Start the Mist web server.
   let assert Ok(_) =
     wisp_mist.handler(router.handle_request, secret_key_base)

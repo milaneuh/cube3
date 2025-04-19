@@ -9,7 +9,7 @@ pub fn handle_request(req: Request) -> Response {
 
   // Pattern matching the route 
   case wisp.path_segments(req) {
-    [] -> hello_world()
+    ["hello-world"] -> hello_world()
     _ -> wisp.not_found()
   }
 }
