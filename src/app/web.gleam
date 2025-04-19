@@ -9,16 +9,6 @@ pub type Context {
   Context(static_directory: String, items: List(String))
 }
 
-/// The middleware stack that the request handler uses. The stack is itself a
-/// middleware function!
-///
-/// Middleware wrap each other, so the request travels through the stack from
-/// top to bottom until it reaches the request handler, at which point the
-/// response travels back up through the stack.
-/// 
-/// The middleware used here are the ones that are suitable for use in your
-/// typical web application.
-/// 
 pub fn middleware(
   req: wisp.Request,
   ctx: Context,
