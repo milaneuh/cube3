@@ -1,5 +1,12 @@
 import wisp
 
+// Sometimes, we need to share some data across requests to make them easy to access.
+// These data are like database connections, user sessions, or even some custom data, 
+// like a list of values.
+pub type Context {
+  Context(static_directory: String, items: List(String))
+}
+
 /// The middleware stack that the request handler uses. The stack is itself a
 /// middleware function!
 ///

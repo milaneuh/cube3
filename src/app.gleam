@@ -1,4 +1,5 @@
 import app/router
+import app/web
 import dot_env
 import dot_env/env
 import gleam/erlang/process
@@ -17,8 +18,10 @@ pub fn main() {
   |> dot_env.set_debug(False)
   |> dot_env.load()
 
-  // Fetching the secret base 
+  // Fetching the secret key base 
   let assert Ok(secret_key_base) = env.get_string("SECRET")
+
+  let ctx = web.Context(static_directory: static_directory(), items: [])
   // Start the Mist web server.
   let assert Ok(_) =
     wisp_mist.handler(router.handle_request, secret_key_base)
@@ -29,4 +32,9 @@ pub fn main() {
   // The web server runs in new Erlang process, so put this one to sleep while
   // it works concurrently.
   process.sleep_forever()
+}
+
+fn static_directory() {
+  let assert Ok(priv_directory) = wisp.priv_directory("app")
+  priv_directory <> "/static"
 }
