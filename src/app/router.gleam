@@ -1,5 +1,7 @@
+import app/pages
+import app/pages/layout.{layout}
 import app/web.{type Context}
-import gleam/string_tree
+import lustre/element
 import wisp.{type Request, type Response}
 
 /// The HTTP request handler- your application!
@@ -11,7 +13,10 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   case wisp.path_segments(req) {
     // Homepage
     [] -> {
-      wisp.html_response(string_tree.from_string("Home"), 200)
+      [pages.home()]
+      |> layout
+      |> element.to_document_string_builder()
+      |> wisp.html_response(200)
     }
 
     // All the empty responses
