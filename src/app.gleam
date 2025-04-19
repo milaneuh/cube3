@@ -22,9 +22,11 @@ pub fn main() {
   let assert Ok(secret_key_base) = env.get_string("SECRET")
 
   let ctx = web.Context(static_directory: static_directory(), items: [])
+
+  let handler = router.handle_request(_, ctx)
   // Start the Mist web server.
   let assert Ok(_) =
-    wisp_mist.handler(router.handle_request, secret_key_base)
+    wisp_mist.handler(handler, secret_key_base)
     |> mist.new
     |> mist.port(8080)
     |> mist.start_http

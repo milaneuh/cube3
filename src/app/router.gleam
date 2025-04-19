@@ -1,11 +1,11 @@
-import app/web
+import app/web.{type Context}
 import gleam/string_tree
 import wisp.{type Request, type Response}
 
 /// The HTTP request handler- your application!
-pub fn handle_request(req: Request) -> Response {
+pub fn handle_request(req: Request, ctx: Context) -> Response {
   // Apply the middleware stack for this request/response.
-  use req <- web.middleware(req)
+  use req <- web.middleware(req, ctx)
 
   // Pattern matching the route 
   case wisp.path_segments(req) {
