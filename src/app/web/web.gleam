@@ -1,5 +1,11 @@
+import app/models/tenant/tenant
+import app/models/user/user.{type User}
+import app/models/user_tenant_role/user_tenant_role.{
+  type UserTenantRoleForAccess,
+}
 import app/types/email
 import gleam/bool
+import gleam/option.{type Option}
 import gleam/string_tree
 import pog
 import wisp
@@ -12,6 +18,14 @@ pub type ApplicationContext {
     static_directory: String,
     db: pog.Connection,
     send_email: fn(email.EmailMessage) -> Result(Nil, String),
+  )
+}
+
+pub type RquestContext {
+  RquestContext(
+    user: Option(User),
+    user_tenant_roles: Option(List(UserTenantRoleForAccess)),
+    selected_tenant_id: Option(tenant.TenantId),
   )
 }
 
