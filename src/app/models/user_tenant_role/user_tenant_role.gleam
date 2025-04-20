@@ -1,6 +1,8 @@
 import app/models/tenant/tenant.{type TenantId}
 import app/models/user/user.{type UserId}
 import app/models/user_tenant_role/sql
+import app/types/email
+import gleam/list
 import gleam/result
 import pog
 
@@ -55,26 +57,64 @@ pub fn remove_tenant_user_role(
   Ok(Nil)
 }
 
+pub type UserTenantRoleForAccess {
+  UserTenantRoleForAccess(
+    tenant_id: tenant.TenantId,
+    tenant_full_name: String,
+    role: UserTenantRole,
+  )
+}
+
 pub fn get_user_tenant_roles(
   db: pog.Connection,
   user_id: UserId,
-) -> Result(List(sql.GetUserTenantRolesRow), pog.QueryError) {
+) -> Result(List(UserTenantRoleForAccess), pog.QueryError) {
   use result <- result.try(sql.get_user_tenant_roles(
     db,
     user_id |> user.id_to_uuid,
   ))
-  Ok(result.rows)
+  Ok(
+    result.rows
+    |> list.map(fn(row) {
+      UserTenantRoleForAccess(
+        tenant_id: row.tenant_id |> tenant.tenant_id,
+        tenant_full_name: row.full_name,
+        role: {
+          let assert Ok(role) = row.role_desc |> role_from_string()
+          role
+        },
+      )
+    }),
+  )
+}
+
+pub type TenantUser {
+  TenantUser(email_address: email.Email, role: UserTenantRole, is_pending: Bool)
 }
 
 pub fn get_tenant_users(
   db: pog.Connection,
   tenant_id: TenantId,
-) -> Result(List(sql.GetTenantUserRow), pog.QueryError) {
-  // Lazy hack: third boolean field is whether user is pending
+) -> Result(List(TenantUser), pog.QueryError) {
   use result <- result.try(sql.get_tenant_user(
     db,
     tenant_id |> tenant.id_to_uuid,
   ))
 
-  Ok(result.rows)
+  Ok(
+    result.rows
+    |> list.map(fn(tenant_user) {
+      TenantUser(
+        is_pending: tenant_user.is_pending,
+        role: {
+          let assert Ok(role) = tenant_user.role_desc |> role_from_string
+          role
+        },
+        email_address: {
+          let assert Ok(email) = email.parse(tenant_user.email_address)
+          email
+        },
+      )
+    }),
+  )
 }
