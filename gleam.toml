@@ -13,6 +13,8 @@ name = "app"
 
 [dependencies]
 gleam_stdlib = ">= 0.44.0 and < 2.0.0"
+gleam_pgo = ">= 0.12.0 and < 1.0.0"
+birl = ">= 1.7.1 and < 2.0.0"
 wisp = ">= 1.6.0 and < 2.0.0"
 mist = ">= 4.0.7 and < 5.0.0"
 gleam_erlang = ">= 0.34.0 and < 1.0.0"

@@ -1,8 +1,11 @@
-import app/router
-import app/web
+import app/types/email
+import app/web/router
+import app/web/web
 import dot_env
 import dot_env/env
 import gleam/erlang/process
+import gleam/option
+import gleam/pgo
 import mist
 import wisp
 import wisp/wisp_mist
@@ -21,9 +24,25 @@ pub fn main() {
   // Fetching the secret key base 
   let assert Ok(secret_key_base) = env.get_string("SECRET")
 
-  let ctx = web.Context(static_directory: static_directory())
+  let db =
+    pgo.connect(
+      pgo.Config(
+        ..pgo.default_config(),
+        host: "localhost",
+        password: option.Some("postgres"),
+        database: "cube-3-indiv",
+        pool_size: 15,
+      ),
+    )
 
-  let handler = router.handle_request(_, ctx)
+  let app_ctx =
+    web.ApplicationContext(
+      db: db,
+      static_directory: static_directory(),
+      send_email: email.print_email_message,
+    )
+
+  let handler = router.handle_request(_, app_ctx)
   // Start the Mist web server.
   let assert Ok(_) =
     wisp_mist.handler(handler, secret_key_base)
