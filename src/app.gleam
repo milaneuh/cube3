@@ -30,7 +30,7 @@ pub fn main() {
         ..pog.default_config(),
         host: "localhost",
         password: option.Some("postgres"),
-        database: "cube-3-indiv",
+        database: "app",
         pool_size: 15,
       ),
     )
@@ -43,6 +43,7 @@ pub fn main() {
     )
 
   let handler = router.handle_request(_, app_ctx)
+
   // Start the Mist web server.
   let assert Ok(_) =
     wisp_mist.handler(handler, secret_key_base)
