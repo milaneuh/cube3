@@ -1,20 +1,23 @@
-import app/web.{type Context}
+import app/routes/register
+import app/web.{type ApplicationContext}
 import gleam/string_tree
 import wisp.{type Request, type Response}
 
 /// The HTTP request handler- your application!
-pub fn handle_request(req: Request, ctx: Context) -> Response {
+pub fn handle_request(req: Request, app_ctx: ApplicationContext) -> Response {
   // Apply the middleware stack for this request/response.
-  use req <- web.middleware(req, ctx)
+  use req <- web.middleware(req, app_ctx)
 
   // Pattern matching the route 
   case wisp.path_segments(req) {
-    // Homepage
+    // Homepage "/"
     [] -> {
       "<h1>Hello World!</h1>"
       |> string_tree.from_string()
       |> wisp.html_response(200)
     }
+
+    ["register"] -> register.register_handler(req)
 
     // All the empty responses
     ["internal-server-error"] -> wisp.internal_server_error()

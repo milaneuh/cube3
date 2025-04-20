@@ -21,7 +21,7 @@ pub fn main() {
   // Fetching the secret key base 
   let assert Ok(secret_key_base) = env.get_string("SECRET")
 
-  let ctx = web.Context(static_directory: static_directory(), items: [])
+  let ctx = web.Context(static_directory: static_directory())
 
   let handler = router.handle_request(_, ctx)
   // Start the Mist web server.
