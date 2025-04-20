@@ -1,12 +1,18 @@
+import app/types/email
 import gleam/bool
 import gleam/string_tree
+import pog
 import wisp
 
 // Sometimes, we need to share some data across requests to make them easy to access.
 // These data are like database connections, user sessions, or even some custom data, 
 // like a list of values.
 pub type ApplicationContext {
-  Context(static_directory: String)
+  ApplicationContext(
+    static_directory: String,
+    db: pog.Connection,
+    send_email: fn(email.EmailMessage) -> Result(Nil, String),
+  )
 }
 
 pub fn middleware(

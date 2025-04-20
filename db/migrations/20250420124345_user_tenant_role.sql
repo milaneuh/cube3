@@ -1,7 +1,10 @@
 -- migrate:up
 
-CREATE TABLE user_tenant_roles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id UUID, role_desc VARCHAR(255) NOT NULL); 
+CREATE TABLE tenant_user_roles (
+    user_id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    role_desc VARCHAR(255) NOT NULL,
+    PRIMARY KEY (user_id, tenant_id)
+);
 
 -- migrate:down

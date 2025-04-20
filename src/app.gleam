@@ -5,8 +5,8 @@ import dot_env
 import dot_env/env
 import gleam/erlang/process
 import gleam/option
-import gleam/pgo
 import mist
+import pog
 import wisp
 import wisp/wisp_mist
 
@@ -25,9 +25,9 @@ pub fn main() {
   let assert Ok(secret_key_base) = env.get_string("SECRET")
 
   let db =
-    pgo.connect(
-      pgo.Config(
-        ..pgo.default_config(),
+    pog.connect(
+      pog.Config(
+        ..pog.default_config(),
         host: "localhost",
         password: option.Some("postgres"),
         database: "cube-3-indiv",

@@ -1,5 +1,5 @@
-import app/routes/register
-import app/web.{type ApplicationContext}
+import app/web/routes/register
+import app/web/web.{type ApplicationContext}
 import gleam/string_tree
 import wisp.{type Request, type Response}
 

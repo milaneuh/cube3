@@ -1,6 +1,5 @@
 import formal/form.{type Form}
 import gleam/option.{type Option, None, Some}
-import lustre
 import lustre/attribute.{type Attribute, attribute}
 import lustre/element.{type Element, element}
 import lustre/element/html.{text}
@@ -90,7 +89,43 @@ pub fn default(title: String, content) {
   ])
 }
 
-// Form layouts 
+pub fn field_error(form, name) {
+  let error_element = case form.field_state(form, name) {
+    Ok(_) -> element.none()
+    Error(message) ->
+      html.div(
+        [
+          attribute.class(
+            "alert alert-error py-2 px-4 text-sm rounded text-center",
+          ),
+          attribute.role("alert"),
+        ],
+        [html.span([], [text(message)])],
+      )
+  }
+
+  html.div([attribute.class("min-h-8 mb-2")], [error_element])
+}
+
+pub fn form_field(
+  form: Form,
+  name name: String,
+  kind kind: String,
+  title title: String,
+  attributes additional_attributes: List(Attribute(a)),
+) -> Element(a) {
+  html.label([], [
+    html.div([], [element.text(title)]),
+    html.input([
+      attribute.type_(kind),
+      attribute.name(name),
+      attribute.value(form.value(form, name)),
+      ..additional_attributes
+    ]),
+    field_error(form, name),
+  ])
+}
+
 pub fn form_error(error: Option(String)) {
   let error_element = case error {
     None -> element.none()
@@ -109,22 +144,47 @@ pub fn form_error(error: Option(String)) {
   html.div([attribute.class("min-h-8 mb-2")], [error_element])
 }
 
-pub fn field_error(form, name) {
-  let error_element = case form.field_state(form, name) {
-    Ok(_) -> element.none()
-    Error(message) ->
+pub fn tenant_name_input(form: Form, name: String) {
+  html.div([attribute.class("mb-2")], [
+    html.label([attribute.for(name), attribute.class("font-bold mb-2 pl-1")], [
+      element.text("Nom de l'Entreprise"),
       html.div(
+        [attribute.class("input input-bordered flex items-center gap-4 mb-2")],
         [
-          attribute.class(
-            "alert alert-error py-2 px-4 text-sm rounded text-center",
+          html.svg(
+            [
+              attribute.class("h-4 w-4 opacity-70"),
+              attribute("fill", "currentColor"),
+              attribute("viewBox", "0 0 512 512"),
+              attribute("xmlns", "http://www.w3.org/2000/svg"),
+            ],
+            [
+              element(
+                "path",
+                [
+                  attribute(
+                    "d",
+                    "M48 0C21.5 0 0 21.5 0 48V464c0 26.5 21.5 48 48 48h96V432c0-26.5 21.5-48 48-48s48 21.5 48 48v80h96c26.5 0 48-21.5 48-48V48c0-26.5-21.5-48-48-48H48zM64 240c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V240zm112-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V240c0-8.8 7.2-16 16-16zm80 16c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H272c-8.8 0-16-7.2-16-16V240zM80 96h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16zm80 16c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V112zM272 96h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H272c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16z",
+                  ),
+                ],
+                [],
+              ),
+            ],
           ),
-          attribute.role("alert"),
+          html.input([
+            attribute.placeholder("AwesomeCorp LLC"),
+            attribute.class("grow"),
+            attribute.type_("text"),
+            attribute.name(name),
+            attribute.required(True),
+            attribute.value(form.value(form, name)),
+            attribute.autocomplete("off"),
+          ]),
         ],
-        [html.span([], [text(message)])],
-      )
-  }
-
-  html.div([attribute.class("min-h-8 mb-2")], [error_element])
+      ),
+    ]),
+    field_error(form, name),
+  ])
 }
 
 pub fn email_input(form: Form, name: String, disabled: Bool) {
@@ -175,6 +235,56 @@ pub fn email_input(form: Form, name: String, disabled: Bool) {
               attribute.value(form.value(form, name)),
               attribute.autocomplete("off"),
               attribute.disabled(disabled),
+            ]),
+          ],
+        ),
+      ],
+    ),
+    field_error(form, name),
+  ])
+}
+
+pub fn password_input(form: Form, name: String) {
+  html.div([attribute.class("mb-2")], [
+    html.label(
+      [attribute.for("password"), attribute.class("font-bold mb-2 pl-1")],
+      [
+        element.text("Mot de passe"),
+        html.div(
+          [attribute.class("input input-bordered flex items-center gap-4 mb-2")],
+          [
+            html.svg(
+              [
+                attribute.class("h-4 w-4 opacity-70"),
+                attribute("fill", "currentColor"),
+                attribute("viewBox", "0 0 16 16"),
+                attribute("xmlns", "http://www.w3.org/2000/svg"),
+              ],
+              [
+                element(
+                  "path",
+                  [
+                    attribute("clip-rule", "evenodd"),
+                    attribute(
+                      "d",
+                      "M14 6a4 4 0 0 1-4.899 3.899l-1.955 1.955a.5.5 0 0 1-.353.146H5v1.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2.293a.5.5 0 0 1 .146-.353l3.955-3.955A4 4 0 1 1 14 6Zm-4-2a.75.75 0 0 0 0 1.5.5.5 0 0 1 .5.5.75.75 0 0 0 1.5 0 2 2 0 0 0-2-2Z",
+                    ),
+                    attribute("fill-rule", "evenodd"),
+                  ],
+                  [],
+                ),
+              ],
+            ),
+            html.input([
+              attribute.placeholder("************"),
+              attribute.class("grow"),
+              attribute.type_("password"),
+              attribute.name(name),
+              // attribute.value(form.value(form, name)),
+              attribute.autocomplete("off"),
+              attribute.required(True),
+              // attribute("minlength", "12"),
+              attribute("maxlength", "50"),
             ]),
           ],
         ),

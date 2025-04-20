@@ -32,10 +32,9 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.pending_user_tenant_roles (
-    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     email_address character varying(255) NOT NULL,
     tenant_id uuid NOT NULL,
-    role character varying(255) NOT NULL
+    role_desc character varying(255) NOT NULL
 );
 
 
@@ -46,7 +45,7 @@ CREATE TABLE public.pending_user_tenant_roles (
 CREATE TABLE public.pending_users (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     email_address character varying(255) NOT NULL,
-    invite_token_hash timestamp without time zone NOT NULL,
+    invite_token_hash text NOT NULL,
     expires_at timestamp without time zone NOT NULL,
     invited_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
@@ -62,23 +61,23 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: tenant_user_roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tenant_user_roles (
+    user_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    role_desc character varying(255) NOT NULL
+);
+
+
+--
 -- Name: tenants; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tenants (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     full_name character varying(255) NOT NULL
-);
-
-
---
--- Name: user_tenant_roles; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.user_tenant_roles (
-    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
-    tenant_id uuid,
-    role_desc character varying(255) NOT NULL
 );
 
 
@@ -99,7 +98,7 @@ CREATE TABLE public.users (
 --
 
 ALTER TABLE ONLY public.pending_user_tenant_roles
-    ADD CONSTRAINT pending_user_tenant_roles_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT pending_user_tenant_roles_pkey PRIMARY KEY (email_address, tenant_id);
 
 
 --
@@ -127,19 +126,19 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: tenant_user_roles tenant_user_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_user_roles
+    ADD CONSTRAINT tenant_user_roles_pkey PRIMARY KEY (user_id, tenant_id);
+
+
+--
 -- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenants
     ADD CONSTRAINT tenants_pkey PRIMARY KEY (id);
-
-
---
--- Name: user_tenant_roles user_tenant_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.user_tenant_roles
-    ADD CONSTRAINT user_tenant_roles_pkey PRIMARY KEY (id);
 
 
 --
