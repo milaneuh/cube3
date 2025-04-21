@@ -8,4 +8,4 @@ CREATE TABLE tenants (
 );
 
 -- migrate:down
-
+DROP TABLE tenants;

@@ -32,9 +32,10 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.pending_user_tenant_roles (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     email_address character varying(255) NOT NULL,
     tenant_id uuid NOT NULL,
-    role_desc character varying(255) NOT NULL
+    role_desc text NOT NULL
 );
 
 
@@ -67,7 +68,7 @@ CREATE TABLE public.schema_migrations (
 CREATE TABLE public.tenant_user_roles (
     user_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
-    role_desc character varying(255) NOT NULL
+    role_desc text NOT NULL
 );
 
 
@@ -78,6 +79,20 @@ CREATE TABLE public.tenant_user_roles (
 CREATE TABLE public.tenants (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     full_name character varying(255) NOT NULL
+);
+
+
+--
+-- Name: user_sessions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_sessions (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    session_hash bytea NOT NULL,
+    user_id uuid NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    expires_at timestamp without time zone NOT NULL,
+    invited_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -98,7 +113,7 @@ CREATE TABLE public.users (
 --
 
 ALTER TABLE ONLY public.pending_user_tenant_roles
-    ADD CONSTRAINT pending_user_tenant_roles_pkey PRIMARY KEY (email_address, tenant_id);
+    ADD CONSTRAINT pending_user_tenant_roles_pkey PRIMARY KEY (id);
 
 
 --
@@ -142,11 +157,11 @@ ALTER TABLE ONLY public.tenants
 
 
 --
--- Name: users users_email_address_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_sessions user_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_email_address_key UNIQUE (email_address);
+ALTER TABLE ONLY public.user_sessions
+    ADD CONSTRAINT user_sessions_pkey PRIMARY KEY (id);
 
 
 --
@@ -155,6 +170,73 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ix_pending_user_tenant_role_tenant; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ix_pending_user_tenant_role_tenant ON public.pending_user_tenant_roles USING btree (tenant_id);
+
+
+--
+-- Name: ux_pending_user_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_pending_user_email ON public.pending_users USING btree (email_address);
+
+
+--
+-- Name: ux_pending_user_tenant_role_email_tenant; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_pending_user_tenant_role_email_tenant ON public.pending_user_tenant_roles USING btree (email_address, tenant_id);
+
+
+--
+-- Name: ux_pending_user_token_hash; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_pending_user_token_hash ON public.pending_users USING btree (invite_token_hash);
+
+
+--
+-- Name: ux_user_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_user_email ON public.users USING btree (email_address);
+
+
+--
+-- Name: pending_user_tenant_roles pending_user_tenant_roles_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pending_user_tenant_roles
+    ADD CONSTRAINT pending_user_tenant_roles_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: tenant_user_roles tenant_user_roles_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_user_roles
+    ADD CONSTRAINT tenant_user_roles_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: tenant_user_roles tenant_user_roles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_user_roles
+    ADD CONSTRAINT tenant_user_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: user_sessions user_sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_sessions
+    ADD CONSTRAINT user_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -167,8 +249,10 @@ ALTER TABLE ONLY public.users
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
+    ('20250420000001'),
     ('20250420122754'),
     ('20250420123216'),
     ('20250420124345'),
     ('20250420124936'),
-    ('20250420125250');
+    ('20250421125641'),
+    ('20250421130823');
