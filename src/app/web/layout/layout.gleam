@@ -1,8 +1,15 @@
+import app/models/tenant/tenant
+import app/models/user_tenant_role/user_tenant_role
+import app/types/email
+import app/web/middleware
+import app/web/web
 import formal/form.{type Form}
+import gleam/list
 import gleam/option.{type Option, None, Some}
 import lustre/attribute.{type Attribute, attribute}
 import lustre/element.{type Element, element}
 import lustre/element/html.{text}
+import youid/uuid
 
 pub fn base_html(title: String, children) {
   html.html([attribute("lang", "en")], [
@@ -23,15 +30,99 @@ pub fn base_html(title: String, children) {
   |> element.to_document_string_builder
 }
 
-pub fn default(title: String, content) {
-  let auth_element =
-    html.div([attribute.class("flex-0")], [
-      html.a([attribute.href("/login")], [
-        html.button([attribute.class("btn"), attribute.type_("button")], [
-          html.text("Login"),
+pub fn default(title: String, req_ctx: web.RequestContext, content) {
+  let auth_element = case req_ctx.user {
+    Some(user) ->
+      html.div([attribute.class("dropdown")], [
+        html.div(
+          [
+            attribute.class("btn m-1"),
+            attribute.role("button"),
+            attribute("tabindex", "0"),
+          ],
+          [text(email.to_string(user.email_address))],
+        ),
+        html.ul(
+          [
+            attribute.class(
+              "dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow",
+            ),
+            attribute("tabindex", "0"),
+          ],
+          [html.li([], [html.a([], [text("Se deconnecter")])])],
+        ),
+      ])
+    None ->
+      html.div([attribute.class("flex-0")], [
+        html.a([attribute.href("/login")], [
+          html.button([attribute.class("btn"), attribute.type_("button")], [
+            html.text("Se connecter"),
+          ]),
         ]),
-      ]),
-    ])
+      ])
+  }
+
+  let tenant_element = case req_ctx.user_tenant_roles {
+    Some([]) -> element.none()
+    Some(roles) ->
+      html.form([attribute.method("get")], [
+        html.select(
+          [
+            attribute.class("select select-bordered w-full max-w-xs"),
+            attribute.attribute("onchange", "this.parentElement.submit()"),
+            attribute.name("tenantId"),
+          ],
+          [
+            html.option(
+              [
+                attribute.disabled(True),
+                attribute.selected(option.is_none(req_ctx.selected_tenant_id)),
+              ],
+              "Selectioner un Tenant",
+            ),
+            ..roles
+            |> list.map(fn(role) {
+              html.option(
+                [
+                  attribute.value(
+                    role.tenant_id |> tenant.id_to_uuid() |> uuid.to_string(),
+                  ),
+                  attribute.selected(
+                    Some(role.tenant_id) == req_ctx.selected_tenant_id,
+                  ),
+                ],
+                role.tenant_full_name,
+              )
+            })
+          ],
+        ),
+      ])
+
+    _ -> element.none()
+  }
+
+  let admin_menu_items = case middleware.current_user_tenant_role(req_ctx) {
+    Some(user_tenant_role.TenantOwner) | Some(user_tenant_role.TenantAdmin) ->
+      html.ul([], [
+        html.li([], [
+          html.h2([attribute.class("menu-title")], [text("Admin")]),
+          html.ul([attribute.class("menu")], [
+            html.li([], [
+              html.a(
+                [
+                  // attribute.class("active"),
+                  attribute.href("/admin/manage-users"),
+                ],
+                [text("Utilisateurs")],
+              ),
+            ]),
+            html.li([], [html.a([], [text("Integrations")])]),
+            html.li([], [html.a([], [text("Facturations")])]),
+          ]),
+        ]),
+      ])
+    _ -> element.none()
+  }
 
   base_html(title, [
     html.div([attribute.class("drawer")], [
@@ -55,9 +146,10 @@ pub fn default(title: String, content) {
                     attribute.class("btn btn-neutral drawer-button"),
                     attribute.for("page-drawer"),
                   ],
-                  [text("[Product Name]")],
+                  [text("Cube 3")],
                 ),
               ]),
+              html.div([], [tenant_element]),
               html.div([attribute.class("flex-0")], [auth_element]),
             ]),
           ],
@@ -82,6 +174,7 @@ pub fn default(title: String, content) {
           [
             html.li([], [html.a([attribute.href("/demo")], [text("Demo Page")])]),
             html.li([], [html.a([], [text("Something Else")])]),
+            admin_menu_items,
           ],
         ),
       ]),
@@ -147,7 +240,7 @@ pub fn form_error(error: Option(String)) {
 pub fn tenant_name_input(form: Form, name: String) {
   html.div([attribute.class("mb-2")], [
     html.label([attribute.for(name), attribute.class("font-bold mb-2 pl-1")], [
-      element.text("Nom de l'Entreprise"),
+      element.text("Nom de l'entreprise"),
       html.div(
         [attribute.class("input input-bordered flex items-center gap-4 mb-2")],
         [
@@ -249,7 +342,7 @@ pub fn password_input(form: Form, name: String) {
     html.label(
       [attribute.for("password"), attribute.class("font-bold mb-2 pl-1")],
       [
-        element.text("Mot de passe"),
+        element.text("Password"),
         html.div(
           [attribute.class("input input-bordered flex items-center gap-4 mb-2")],
           [
