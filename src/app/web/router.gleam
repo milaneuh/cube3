@@ -1,4 +1,5 @@
 import app/web/middleware
+import app/web/routes/login
 import app/web/routes/register
 import app/web/routes/register_tenant
 import app/web/web.{type ApplicationContext}
@@ -30,6 +31,7 @@ pub fn handle_request(req: Request, app_ctx: ApplicationContext) -> Response {
       |> wisp.html_response(200)
     }
 
+    ["login"] -> login.login_handler(req, app_ctx, req_ctx)
     ["tenant", "register"] ->
       register_tenant.register_handler(req, app_ctx, req_ctx)
     ["register"] -> register.register_handler(req, app_ctx, req_ctx)

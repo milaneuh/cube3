@@ -173,7 +173,9 @@ pub fn default(title: String, req_ctx: web.RequestContext, content) {
           ],
           [
             html.li([], [html.a([attribute.href("/demo")], [text("Demo Page")])]),
-            html.li([], [html.a([], [text("Something Else")])]),
+            html.li([], [
+              html.a([], [text("Un exemple de liens de navigation")]),
+            ]),
             admin_menu_items,
           ],
         ),
