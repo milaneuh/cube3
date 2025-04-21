@@ -8,20 +8,19 @@ import youid/uuid.{type Uuid}
 /// > 🐿️ This function was generated automatically using v3.0.2 of
 /// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
 ///
-pub fn create_with_default(db, arg_1, arg_2, arg_3, arg_4) {
+pub fn create_with_default(db, arg_1, arg_2, arg_3) {
   let decoder = decode.map(decode.dynamic, fn(_) { Nil })
 
   "INSERT INTO user_sessions
-(session_hash, user_id, created_at, expires_at)
+(session_hash, user_id,  expires_at)
 VALUES
-($1, $2, $3, $4);
+($1, $2, $3);
  
 "
   |> pog.query
   |> pog.parameter(pog.bytea(arg_1))
   |> pog.parameter(pog.text(uuid.to_string(arg_2)))
   |> pog.parameter(pog.timestamp(arg_3))
-  |> pog.parameter(pog.timestamp(arg_4))
   |> pog.returning(decoder)
   |> pog.execute(db)
 }
