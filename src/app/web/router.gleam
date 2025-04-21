@@ -1,4 +1,6 @@
+import app/web/middleware
 import app/web/routes/register
+import app/web/routes/register_tenant
 import app/web/web.{type ApplicationContext}
 import gleam/string_tree
 import wisp.{type Request, type Response}
@@ -6,7 +8,18 @@ import wisp.{type Request, type Response}
 /// The HTTP request handler- your application!
 pub fn handle_request(req: Request, app_ctx: ApplicationContext) -> Response {
   // Apply the middleware stack for this request/response.
-  use req <- web.middleware(req, app_ctx)
+  use user <- middleware.derive_user(req, app_ctx.db)
+  use user_tenant_roles <- middleware.derive_user_tenant_roles(app_ctx.db, user)
+  use selected_tenant_id <- middleware.derive_selected_tenant(req)
+
+  let req_ctx =
+    web.RequestContext(
+      user: user,
+      user_tenant_roles: user_tenant_roles,
+      selected_tenant_id: selected_tenant_id,
+    )
+  use req <- web.middleware(req, app_ctx, req_ctx)
+  use req_ctx <- middleware.tenant_auth(req, req_ctx)
 
   // Pattern matching the route 
   case wisp.path_segments(req) {
@@ -17,7 +30,10 @@ pub fn handle_request(req: Request, app_ctx: ApplicationContext) -> Response {
       |> wisp.html_response(200)
     }
 
-    ["register"] -> register.register_handler(req)
+    ["tenant", "register"] ->
+      register_tenant.register_handler(req, app_ctx, req_ctx)
+    ["register"] -> register.register_handler(req, app_ctx, req_ctx)
+    ["register", "confirm"] -> register.confirm_handler(req, app_ctx, req_ctx)
 
     // All the empty responses
     ["internal-server-error"] -> wisp.internal_server_error()

@@ -21,8 +21,8 @@ pub type ApplicationContext {
   )
 }
 
-pub type RquestContext {
-  RquestContext(
+pub type RequestContext {
+  RequestContext(
     user: Option(User),
     user_tenant_roles: Option(List(UserTenantRoleForAccess)),
     selected_tenant_id: Option(tenant.TenantId),
@@ -32,6 +32,7 @@ pub type RquestContext {
 pub fn middleware(
   req: wisp.Request,
   app_ctx: ApplicationContext,
+  _req_ctx: RequestContext,
   handle_request: fn(wisp.Request) -> wisp.Response,
 ) -> wisp.Response {
   // Permit browsers to simulate methods other than GET and POST using the
