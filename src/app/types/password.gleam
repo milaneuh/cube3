@@ -97,7 +97,7 @@ pub fn hash(password: Password) -> String {
 }
 
 pub fn valid(password: Password, hash: String) -> Bool {
-  let assert Ok(compare) = argus.verify(to_string(password), hash)
+  let assert Ok(compare) = argus.verify(hash, to_string(password))
   compare
 }
 
