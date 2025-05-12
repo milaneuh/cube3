@@ -4,9 +4,9 @@ CREATE TABLE user_sessions (
     session_hash BYTEA NOT NULL,
     user_id UUID NOT NULL
         REFERENCES users (id),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
-    invited_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    invited_at TEXT NOT NULL
 );
 
 

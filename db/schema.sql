@@ -90,9 +90,9 @@ CREATE TABLE public.user_sessions (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     session_hash bytea NOT NULL,
     user_id uuid NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    expires_at timestamp without time zone NOT NULL,
-    invited_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at text NOT NULL,
+    expires_at text NOT NULL,
+    invited_at text NOT NULL
 );
 
 

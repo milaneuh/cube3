@@ -1,4 +1,5 @@
 import app/web/middleware
+import app/web/routes/demo
 import app/web/routes/login
 import app/web/routes/register
 import app/web/routes/register_tenant
@@ -26,11 +27,11 @@ pub fn handle_request(req: Request, app_ctx: ApplicationContext) -> Response {
   case wisp.path_segments(req) {
     // Homepage "/"
     [] -> {
-      "<h1>Hello World!</h1>"
+      "<h1>Hello Unconnected user!</h1>"
       |> string_tree.from_string()
       |> wisp.html_response(200)
     }
-
+    ["demo"] -> demo.demo_handler(req, req_ctx, app_ctx)
     ["login"] -> login.login_handler(req, app_ctx, req_ctx)
     ["tenant", "register"] ->
       register_tenant.register_handler(req, app_ctx, req_ctx)

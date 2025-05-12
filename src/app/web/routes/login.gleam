@@ -8,6 +8,7 @@ import formal/form.{type Form}
 import gleam/bool
 import gleam/erlang/process
 import gleam/http.{Get, Post}
+import gleam/http/response
 import gleam/int
 import gleam/io
 import gleam/option.{type Option, None, Some}
@@ -118,14 +119,18 @@ fn submit_login_form(
     Ok(data) -> {
       case login(app_ctx.db, data.email, data.password) {
         Ok(#(session_key, seconds_until_expiration)) -> {
-          wisp.redirect("/demo")
-          |> wisp.set_cookie(
-            req,
-            "session",
-            user_session.key_to_string(session_key),
-            wisp.Signed,
-            seconds_until_expiration,
-          )
+          let response =
+            wisp.redirect("/demo")
+            |> wisp.set_cookie(
+              req,
+              "session",
+              user_session.key_to_string(session_key),
+              wisp.Signed,
+              seconds_until_expiration,
+            )
+
+          echo response |> response.get_cookies()
+          response
         }
         Error(InvalidCredentials) -> {
           // Timing obfuscation + poor man's rate-limiting

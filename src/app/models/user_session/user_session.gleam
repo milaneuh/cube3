@@ -38,25 +38,20 @@ pub fn create_with_defaults(
   let session_hash =
     crypto.hash(crypto.Sha256, bit_array.from_string(session_key))
 
-  let now = birl.utc_now()
-
-  let #(#(year, month, day), #(hours, minutes, seconds)) =
-    now
-    |> birl.add(duration.days(default_session_days))
-    |> birl.to_erlang_universal_datetime
+  let now = birl.utc_now() |> birl.to_iso8601()
 
   let expiration =
-    pog.Timestamp(
-      date: pog.Date(year, month, day),
-      time: pog.Time(hours, minutes, seconds, 0),
-    )
-
+    birl.utc_now()
+    |> birl.add(duration.days(default_session_days))
+    |> birl.to_iso8601()
   use _ <- result.try({
     sql.create_with_default(
       conn,
       session_hash,
       user_id |> user.id_to_uuid(),
       expiration,
+      now,
+      now,
     )
   })
 
@@ -73,7 +68,12 @@ pub fn get_by_session_key_string(
 
   use result <- result.try({ sql.get_by_session_key(conn, hash) })
   case result.rows {
-    [user_session] ->
+    [user_session] -> {
+      echo user_session
+      let assert Ok(time) = birl.parse(user_session.created_at)
+      echo time |> birl.to_date_string()
+      let assert Ok(time) = birl.parse(user_session.created_at)
+      echo time |> birl.to_date_string()
       Ok(
         Some(
           SessionQueryRecord(
@@ -90,6 +90,7 @@ pub fn get_by_session_key_string(
           ),
         ),
       )
+    }
     _ -> Ok(option.None)
   }
 }

@@ -3,10 +3,13 @@ import app/models/user/user
 import app/models/user_session/user_session
 import app/models/user_tenant_role/user_tenant_role
 import app/web/web
+import argus
+import birl
 import gleam/bool
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import lustre/event
 import pog
 import wisp.{type Request, type Response}
 import youid/uuid
@@ -17,18 +20,38 @@ pub fn derive_session(
   handler: fn(Option(user_session.SessionQueryRecord)) -> Response,
 ) -> Response {
   let session = wisp.get_cookie(req, "session", wisp.Signed)
+  case session {
+    Ok(session) -> echo "session : " <> session
+    _ -> echo "no session"
+  }
   use <- bool.lazy_guard(result.is_error(session), fn() { handler(None) })
-
   let assert Ok(session) = session
   let session = user_session.get_by_session_key_string(conn, session)
+  case session {
+    Ok(Some(record)) ->
+      echo "session found in database, session_id : "
+      <> record.id |> uuid.to_string()
+      <> ", session expired_at : "
+      <> record.expires_at |> birl.to_date_string()
+    Ok(option.None) -> echo "session was not found in database :("
+    Error(_) -> echo "Unexpected error "
+  }
+
+  echo "Result is error ? : " <> result.is_error(session) |> bool.to_string()
+
   use <- bool.lazy_guard(result.is_error(session), fn() {
     wisp.internal_server_error()
   })
 
   let assert Ok(session) = session
+
+  echo "Session is none ? : " <> option.is_none(session) |> bool.to_string()
   use <- bool.lazy_guard(option.is_none(session), fn() { handler(None) })
 
   let assert Some(session) = session
+
+  echo "Session is is expired ? : "
+  <> user_session.is_expired(session) |> bool.to_string()
   use <- bool.lazy_guard(user_session.is_expired(session), fn() {
     handler(None)
   })
@@ -42,6 +65,10 @@ pub fn derive_user(
   handler: fn(Option(user.User)) -> Response,
 ) -> Response {
   use session <- derive_session(req, conn)
+  case session {
+    option.Some(_) -> echo "we have session"
+    _ -> echo "no session"
+  }
   use <- bool.lazy_guard(option.is_none(session), fn() { handler(None) })
 
   let assert Some(session) = session
