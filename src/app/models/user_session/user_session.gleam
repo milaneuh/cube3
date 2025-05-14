@@ -69,11 +69,6 @@ pub fn get_by_session_key_string(
   use result <- result.try({ sql.get_by_session_key(conn, hash) })
   case result.rows {
     [user_session] -> {
-      echo user_session
-      let assert Ok(time) = birl.parse(user_session.created_at)
-      echo time |> birl.to_date_string()
-      let assert Ok(time) = birl.parse(user_session.created_at)
-      echo time |> birl.to_date_string()
       Ok(
         Some(
           SessionQueryRecord(
