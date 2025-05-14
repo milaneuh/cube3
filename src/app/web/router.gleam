@@ -31,7 +31,7 @@ pub fn handle_request(req: Request, app_ctx: ApplicationContext) -> Response {
       |> string_tree.from_string()
       |> wisp.html_response(200)
     }
-    ["demo"] -> demo.demo_handler(req, req_ctx, app_ctx)
+    ["demo"] -> demo.demo_handler(req, app_ctx, req_ctx)
     ["login"] -> login.login_handler(req, app_ctx, req_ctx)
     ["tenant", "register"] ->
       register_tenant.register_handler(req, app_ctx, req_ctx)

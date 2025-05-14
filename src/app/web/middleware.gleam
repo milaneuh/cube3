@@ -20,24 +20,9 @@ pub fn derive_session(
   handler: fn(Option(user_session.SessionQueryRecord)) -> Response,
 ) -> Response {
   let session = wisp.get_cookie(req, "session", wisp.Signed)
-  case session {
-    Ok(session) -> echo "session : " <> session
-    _ -> echo "no session"
-  }
   use <- bool.lazy_guard(result.is_error(session), fn() { handler(None) })
   let assert Ok(session) = session
   let session = user_session.get_by_session_key_string(conn, session)
-  case session {
-    Ok(Some(record)) ->
-      echo "session found in database, session_id : "
-      <> record.id |> uuid.to_string()
-      <> ", session expired_at : "
-      <> record.expires_at |> birl.to_date_string()
-    Ok(option.None) -> echo "session was not found in database :("
-    Error(_) -> echo "Unexpected error "
-  }
-
-  echo "Result is error ? : " <> result.is_error(session) |> bool.to_string()
 
   use <- bool.lazy_guard(result.is_error(session), fn() {
     wisp.internal_server_error()
@@ -45,13 +30,10 @@ pub fn derive_session(
 
   let assert Ok(session) = session
 
-  echo "Session is none ? : " <> option.is_none(session) |> bool.to_string()
   use <- bool.lazy_guard(option.is_none(session), fn() { handler(None) })
 
   let assert Some(session) = session
 
-  echo "Session is is expired ? : "
-  <> user_session.is_expired(session) |> bool.to_string()
   use <- bool.lazy_guard(user_session.is_expired(session), fn() {
     handler(None)
   })
@@ -65,10 +47,6 @@ pub fn derive_user(
   handler: fn(Option(user.User)) -> Response,
 ) -> Response {
   use session <- derive_session(req, conn)
-  case session {
-    option.Some(_) -> echo "we have session"
-    _ -> echo "no session"
-  }
   use <- bool.lazy_guard(option.is_none(session), fn() { handler(None) })
 
   let assert Some(session) = session
@@ -93,8 +71,7 @@ pub fn derive_user_tenant_roles(
   let assert Some(user) = user
 
   case user_tenant_role.get_user_tenant_roles(conn, user.id) {
-    Error(e) -> {
-      echo e
+    Error(_) -> {
       wisp.internal_server_error()
     }
     Ok(roles) -> handler(Some(roles))

@@ -1,40 +1,33 @@
-import app/models/user/user
 import app/types/email
 import app/web/layout/layout
 import app/web/middleware
 import app/web/web
-import gleam/http
-import gleam/option
+import lustre/attribute
+import lustre/element/html
 import wisp.{type Request, type Response}
 
-import lustre/element/html.{text}
-
 pub fn demo_handler(
-  req: Request,
+  _req: Request,
+  _app_ctx: web.ApplicationContext,
   req_ctx: web.RequestContext,
-  app_ctx: web.ApplicationContext,
 ) -> Response {
-  case req.method {
-    http.Get -> hello(req_ctx)
-    _ ->
-      layout.default("Hello Unconnected user !", req_ctx, [
-        html.h1([], [html.text("Hello, !")]),
-      ])
-  }
-  |> wisp.html_response(200)
-}
+  use user <- middleware.require_user(req_ctx)
 
-fn hello(req_ctx: web.RequestContext) {
-  case req_ctx.user {
-    option.None ->
-      layout.default("Hello Unconnected user !", req_ctx, [
-        html.h1([], [html.text("Hello, Unconnected user !")]),
-      ])
-    option.Some(user) ->
-      layout.default("Hello Unconnected user !", req_ctx, [
-        html.h1([], [
-          html.text("Hello, " <> user.email_address |> email.to_string <> " !"),
-        ]),
-      ])
-  }
+  layout.default("Welcome!", req_ctx, [
+    html.div([attribute.class("flex justify-center p-4 xs:mt-8 sm:mt-16")], [
+      html.div(
+        [
+          attribute.class(
+            "min-w-96 max-w-96 border rounded drop-shadow-sm p-4 flex flex-col justify-center",
+          ),
+        ],
+        [
+          html.span([], [
+            html.text("Welcome, " <> email.to_string(user.email_address)),
+          ]),
+        ],
+      ),
+    ]),
+  ])
+  |> wisp.html_response(200)
 }
